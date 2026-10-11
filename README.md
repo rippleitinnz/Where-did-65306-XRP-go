@@ -13,7 +13,7 @@ Everything here can be checked against any full-history server. Every transactio
 
 ## Why I looked
 
-In October 2026 a post went around claiming the ledger showed a 65,305 XRP discrepancy between its total supply and what accounts actually hold. The timing wasn't great: xrpld 3.4.1 had just patched an overflow bug that *could* have minted XRP. That bug was never exploited, but people were understandably asking whether XRP had been created.
+Following up on a claim the XRPL showed a 65,305 XRP discrepancy between its total supply and what accounts actually during discussions around the xrpld 3.4.1 patch of an overflow bug that *could* have minted XRP. That bug was never exploited, but people were understandably asking whether XRP had been created.
 
 The discrepancy is real. I reproduced it myself. The question was which way it went and where it came from.
 
@@ -151,7 +151,7 @@ It only bit when all of these lined up:
 4. The last path tried got partway through moving value and then failed.
 5. That path had already consumed an XRP offer.
 
-Arbitrage bots running partial self-payments through thin XRP-bridged order books hit 1, 2, 3 and 5 all day. Number 4 is the rare part. That's why it's 29 transactions out of hundreds of thousands.
+Arbitrage bots running partial self-payments through thin XRP-bridged order books hit 1, 2, 3 and 5 all day. Number 4 is the rare part. That's why it's only 29 transactions out of hundreds of thousands.
 
 The fix is commit [`828c2e3c7`](https://github.com/XRPLF/rippled/commit/828c2e3c7) ("Restore checkpointed ledger under all paths in PathFind", 25 June 2014), tidied up by [`b9f1b0562`](https://github.com/XRPLF/rippled/commit/b9f1b0562). Both shipped in **rippled 0.25.2 on 7 July 2014**:
 
@@ -222,9 +222,7 @@ All amounts are exact, in XRP. "Debited" and "credited" are the XRP balance chan
 | 29 | 7,388,938 | `27CD4BF4795D2B3E5397D97270BE49D6CC5E8D72340A4297E7F32C4993AF637E` | `rGsEuH6KAitvAHSMmPpysHNVvaVrnEeYg7` | `rn7uHNfZYNRfxUNGyqUBDL2YVf4NDwap6w` -8,116.883117 | `rQLEvSnbgpcUXkTU8VvSzUPX4scukCjuzb` +119.910600 | **7,996.972517** |
 | | | | | | **Total** | **65,303.219010** |
 
-Note on #10: the ledger index and hash for this one got cut off in my terminal output and I'm filling them in from the raw logs. The amounts are exact.
-
-By period:
+Note on #10: the ledger index and hash for this one got cut off in my terminal...you get the picture though
 
 | Period | Transactions | XRP |
 |---|---|---|
@@ -272,5 +270,3 @@ To check the supply at any ledger, page through `ledger_data` with `"type": "acc
 - **Gaps in public history.** s1 returned `markerDoesNotExist` partway through one 2014 ledger, so it's missing some state from that period. When that happens the same request on another server works. Every figure here agrees across more than one server.
 - **Third-party datasets.** The ClickHouse dataset I used for candidate searches undercounts 2016 account activations by about 11,800 and has a few hundred extra fee rows. It's fine for finding candidates and not for final numbers. All final numbers here come straight from rippled.
 - **A full state walk is slow on public servers.** Expect 30–100 accounts a second. Escrows and channels can't exist before ledger 28,685,313, so there's no need to walk them for earlier ledgers.
-
-Chris McKay ([@rippleitinnz](https://github.com/rippleitinnz)), Christchurch, October 2026.
