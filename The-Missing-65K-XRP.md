@@ -14,9 +14,9 @@ Everything here can be checked against any full-history server. Every transactio
 
 ## Why I looked
 
-Following up on a claim the XRPL showed a 65,305 XRP discrepancy between its total supply and what accounts actually during discussions around the xrpld 3.4.1 patch of an overflow bug that could have minted XRP. That bug was never exploited, but people were understandably asking whether XRP had been created.
+Following up on a claim the XRPL showed a 65,305 XRP discrepancy between its total supply and what accounts actually held, during discussions around the xrpld 3.4.1 patch of an overflow bug that could have minted more XRP. That bug was never exploited, but people were understandably asking whether XRP had been created and why the 65k discrepancy.
 
-The discrepancy is real. I reproduced it myself. The question was which way it went and where it came from.
+The discrepancy is real, and it doesn't solely affect XRP, it affected IOU's as well. I was able to reproduce and account for most. The question was which way it went and where it came from.
 
 ## What "total supply" means on the ledger
 
