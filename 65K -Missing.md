@@ -1,4 +1,4 @@
-# Where did 65306 XRP go?
+# Where did 65,306 XRP go?
 
 An audit of the XRP Ledger's supply, from the earliest available ledger in January 2013 to today.
 
@@ -7,13 +7,14 @@ An audit of the XRP Ledger's supply, from the earliest available ledger in Janua
 - Add up every drop of XRP held on the ledger today and you get **65,306.139720 XRP less** than the ledger's own `total_coins` figure. It's missing, not extra. **No XRP has been created.**
 - I went back through the ledger's history and found where it went. **65,303.219010 XRP of it, 99.996%, was destroyed by 29 transactions between late 2013 and July 2014.** All 29 hit the same bug in rippled's old payment engine, and that bug was fixed in rippled 0.25.2 in July 2014.
 - The remaining **2.92 XRP** is from mid-to-late 2013 plus a scattering of 1–2 drop rounding losses. I'm still tracking it down.
+- The same 29 transactions also mis-settled issued currencies. One JPY gateway ended up owing **28,435.55 JPY** less than it should, a few smaller amounts went the same way for USD and CNY, and offer owners were short about **727 CNY and 318 USD**. The 2014 fix stopped that as well.
 - The ledger has balanced **to the drop** every day since October 2016. Since July 2017 the `XRPNotCreated` invariant has checked every transaction anyway.
 
 Everything here can be checked against any full-history server. Every transaction is listed below in full.
 
 ## Why I looked
 
-Following up on a claim the XRPL showed a 65,305 XRP discrepancy between its total supply and what accounts actually during discussions around the xrpld 3.4.1 patch of an overflow bug that *could* have minted XRP. That bug was never exploited, but people were understandably asking whether XRP had been created.
+Following up on a claim the XRPL showed a 65,305 XRP discrepancy between its total supply and what accounts actually during discussions around the xrpld 3.4.1 patch of an overflow bug that could have minted XRP. That bug was never exploited, but people were understandably asking whether XRP had been created.
 
 The discrepancy is real. I reproduced it myself. The question was which way it went and where it came from.
 
@@ -114,7 +115,7 @@ The metadata:
 | `rQLEv…` XRP balance | **+2,469.724510** | what actually happened |
 | JPY delivered to the sender | +1,024.94 | what actually happened |
 
-Two different calculations ended up in the same committed ledger. Debits from an attempt to move the full amount, and credits from the smaller pass that really went through. **12,048.192771 - 2,469.724510 = 9,578.468261 XRP** was taken from one account and given to no one. About 3,975 JPY and 40 USD went the same way on the trust-line side.
+Two different calculations ended up in the same committed ledger. Debits from an attempt to move the full amount, and credits from the smaller pass that really went through. **12,048.192771 - 2,469.724510 = 9,578.468261 XRP** was taken from one account and given to no one. The issued currencies were hit too: the JPY gateway in the path ended up keeping 3,975.06 JPY it should have passed on, and `rnqFWtx…` was paid 10.35 USD instead of 50.48 USD. More on that below.
 
 ## The bug
 
@@ -151,7 +152,7 @@ It only bit when all of these lined up:
 4. The last path tried got partway through moving value and then failed.
 5. That path had already consumed an XRP offer.
 
-Arbitrage bots running partial self-payments through thin XRP-bridged order books hit 1, 2, 3 and 5 all day. Number 4 is the rare part. That's why it's only 29 transactions out of hundreds of thousands.
+Arbitrage bots running partial self-payments through thin XRP-bridged order books hit 1, 2, 3 and 5 all day. Number 4 is the rare part. That's why it's 29 transactions out of hundreds of thousands.
 
 The fix is commit [`828c2e3c7`](https://github.com/XRPLF/rippled/commit/828c2e3c7) ("Restore checkpointed ledger under all paths in PathFind", 25 June 2014), tidied up by [`b9f1b0562`](https://github.com/XRPLF/rippled/commit/b9f1b0562). Both shipped in **rippled 0.25.2 on 7 July 2014**:
 
@@ -200,7 +201,7 @@ All amounts are exact, in XRP. "Debited" and "credited" are the XRP balance chan
 | 7 | 4,214,735 | `7899BF92EB23E9AE3E1CFEA251C990FE9C1DBC6536A105C351D414426CC6BFCE` | `rMKAapx5AUWvUVQ4rFv5jGu3xVTS9sDjqx` | `rsb1PD3qT5bAmeaRB5nwWEQB6iCzKtKPQS` -367.300422<br>`rpk9z22QJQoboCixZSFFd86UgPDRv5eGds` -0.001631 | `rHK6QpWnzqFFZzPTrVP4FUzVAxPTcy2UzY` +83.047697 | **284.254356** |
 | 8 | 4,453,224 | `77D8F88B0F1AA8FBFDCDD933EFB1D6A9D159BC0563D0EF9A32A3C3025AADF08B` | `r42rYHtBsvgrUxdmv8GvLEaV5srcjv5kxr` | `r95koB4DXDc7oBo38AUEi51KnU1qURPVwV` -151.540833<br>`rhioxDeqPJffiXBJmucyjLWrtyFHaqbxsx` -183.459167<br>`rQhJNpaJg13TD4Tn2DxZ6vb7fJUoCHi9se` -65.000000 | `rUsnAg9eKJ2AjpkRDpZLnhNXfCHMxRXZMy` +151.540833 | **248.459167** |
 | 9 | 4,454,409 | `F77D5CD4705E350632DCCBC9C5A2E20DAEC58AFFE9FD9D479D7AA5BD5FBC8FC1` | `rHTsQWMrieh4TQCEUqdVRN3TUV2ncVbfXH` | `r9CpygojFG5zKXvJaG8wDn6oXWGb87DRP` -400.000000 | `rUsnAg9eKJ2AjpkRDpZLnhNXfCHMxRXZMy` +245.677973 | **154.322027** |
-| 10 | (see note) | `(see note)` | `rHTsQWMrieh4TQCEUqdVRN3TUV2ncVbfXH` | `rpP3zg6zZCRr3KL7FGNMz7Es28w8dcSf97` -404.203719 | `rUsnAg9eKJ2AjpkRDpZLnhNXfCHMxRXZMy` +325.788027 | **78.415692** |
+| 10 | 4,460,871 | `06C34E76657239F756208541DAD26010446F12E14069BE505D85DB632FA1673A` | `rHTsQWMrieh4TQCEUqdVRN3TUV2ncVbfXH` | `rpP3zg6zZCRr3KL7FGNMz7Es28w8dcSf97` -404.203719 | `rUsnAg9eKJ2AjpkRDpZLnhNXfCHMxRXZMy` +325.788027 | **78.415692** |
 | 11 | 5,976,764 | `00B2E14F4936E5EEB4120B7B6AE1332BE484F52341E43311606DCEB93520A390` | `rHpoggSkNY7puahMUGVafWPZQ5JH8piZVQ` | `rDCp46HXhStBY5zgS5h913WtsYtKL55MoR` -999.999999<br>`rsd2qPfwi9NpFt8xrHY3nXcHF5pceoyMj8` -0.000001 | `rJdZXpCSBKyVtdBeZFgcPGjCvybRct68nC` +8.000001 | **991.999999** |
 | 12 | 5,977,639 | `ABBFF205A5A954462B34CD498DFF45B01B0046CE29A5E2C5B059E128DCB52CC3` | `rHpoggSkNY7puahMUGVafWPZQ5JH8piZVQ` | `rLcyivdJMj2ZELJkZZLbCr5WVUU7ek1DMu` -1,000.000000 | `rGg7i5p53paiYDrJhmXwdHvYzihJMGdWbT` +140.398224 | **859.601776** |
 | 13 | 6,108,330 | `7FCEA00BB1196DBA5BB179F3EC57D9D100E10962EE1B10EDB9CFEDE08F4BEA08` | `rwzGqdQmrGov6kQ9o6YWuaqJxz94UrLnW7` | `rwBYyfufTzk77zUSKEu4MvixfarC35av1J` -378.624876 | `r3uAR9gtU1ZA7Xizor2MTnwAxDNgN998jT` +72.791542 | **305.833334** |
@@ -222,7 +223,7 @@ All amounts are exact, in XRP. "Debited" and "credited" are the XRP balance chan
 | 29 | 7,388,938 | `27CD4BF4795D2B3E5397D97270BE49D6CC5E8D72340A4297E7F32C4993AF637E` | `rGsEuH6KAitvAHSMmPpysHNVvaVrnEeYg7` | `rn7uHNfZYNRfxUNGyqUBDL2YVf4NDwap6w` -8,116.883117 | `rQLEvSnbgpcUXkTU8VvSzUPX4scukCjuzb` +119.910600 | **7,996.972517** |
 | | | | | | **Total** | **65,303.219010** |
 
-Note on #10: the ledger index and hash for this one got cut off in my terminal...you get the picture though
+By period:
 
 | Period | Transactions | XRP |
 |---|---|---|
@@ -230,6 +231,76 @@ Note on #10: the ledger index and hash for this one got cut off in my terminal..
 | April 2014 (ledgers 5.97M–6.23M) | 6 | 4,411.187840 |
 | May to June 2014 (ledgers 6.75M–7.39M) | 13 | 59,678.148091 |
 | **Total** | **29** | **65,303.219010** |
+
+## Issued currencies were hit too
+
+The bug didn't only hit XRP. Whatever the abandoned path had done to trust lines got committed as well. I checked all 29 transactions two more ways:
+
+- **Every consumed offer:** was its owner paid exactly what their offer shrank by, in whatever currency?
+- **Every account the payment passed through** (gateways, and anyone rippling between their own trust lines): did it come out with the same net position in each currency, apart from a gateway keeping its own transfer fee?
+
+That turned up two more kinds of damage.
+
+**Gateways ended up owing less than they should.** A gateway sitting in the path took in more of its own IOU than it passed on. The holder further back lost it, and the gateway's obligations dropped by the same amount.
+
+| Gateway | Currency | Transactions | Kept beyond its fees |
+|---|---|---|---|
+| `rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6` | JPY | 17 | **28,435.549535 JPY** |
+| `rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q` | USD | 3 | 12.009534 USD |
+| `rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B` (Bitstamp) | USD | 1 | 7.738981 USD |
+| `rHZP1pA3THovFqvwgtM2tnJWrS54hSrDiG` | CNY | 1 | 1.835000 CNY |
+
+**Offer owners were short-changed.** Their offers were consumed in full on the side they were giving, but they were only paid part of what they were owed on the other side. The XRP version of this is the 65,303 XRP above. These are the issued-currency cases:
+
+| Currency (issuer) | Transactions | Short |
+|---|---|---|
+| CNY (`rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK`) | 6 | 305.071672 CNY |
+| CNY (`razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA`) | 9 | 297.880460 CNY |
+| CNY (`rsYnSWfvcJPpKC1QwDfdLixdk8VNQpAUv5`) | 1 | 124.000000 CNY |
+| USD (`rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B`, Bitstamp) | 12 | 194.039822 USD |
+| USD (`rrpNnNLKrartuEqfJGpqyDwPj1AFPg9vn1`) | 2 | 124.229584 USD |
+| **Total** | | **726.952132 CNY, 318.269406 USD** |
+
+Transaction by transaction:
+
+| # | Ledger | Gateway kept | Offer owners short (issued currency) |
+|---|---|---|---|
+| 1 | 4,052,441 | — | 18.446417 CNY (`rUipqpbkHWsEfdHNYVjqViHeM8pUxLzmLe`) |
+| 2 | 4,052,497 | — | 1.202406 CNY (`r3FvhzKtvLRiD3CMs3Xo9iytoSy1TMFkuD`) |
+| 3 | 4,056,164 | — | 17.214604 CNY (`raPVuJgUNSroYbWPTCU3aiszn8pzhcxoWR`) |
+| 4 | 4,056,186 | — | 1.650000 CNY (`raPVuJgUNSroYbWPTCU3aiszn8pzhcxoWR`) |
+| 5 | 4,056,430 | — | 7.554939 CNY (`rKMdfrrSpSw8oqUs1pw1o7uy7ipqFEDr9A`) |
+| 6 | 4,056,536 | — | 13.246215 CNY (`rEpNyx68G6qy3KWZWf4cY1amPrncoGka93`) |
+| 7 | 4,214,735 | 7.738981 USD (`rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B`, after its 0.02 fee) | 45.707838 CNY (`rsb1PD3qT5bAmeaRB5nwWEQB6iCzKtKPQS`) |
+| 8 | 4,453,224 | 6.211479 USD (`rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q`) | 91.729584 USD (`rhioxDeqPJffiXBJmucyjLWrtyFHaqbxsx`)<br>32.500000 USD (`rQhJNpaJg13TD4Tn2DxZ6vb7fJUoCHi9se`) |
+| 9 | 4,454,409 | 3.858051 USD (`rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q`) | 20.910844 CNY (`r9CpygojFG5zKXvJaG8wDn6oXWGb87DRP`) |
+| 10 | 4,460,871 | 1.940004 USD (`rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q`) | 10.455426 CNY (`rpP3zg6zZCRr3KL7FGNMz7Es28w8dcSf97`) |
+| 11 | 5,976,764 | 991.999999 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 124.000000 CNY (`rDCp46HXhStBY5zgS5h913WtsYtKL55MoR`) |
+| 12 | 5,977,639 | 859.601776 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 45.386974 CNY (`rLcyivdJMj2ZELJkZZLbCr5WVUU7ek1DMu`) |
+| 13 | 6,108,330 | 1.835000 CNY (`rHZP1pA3THovFqvwgtM2tnJWrS54hSrDiG`) | 2.072859 USD (`rwBYyfufTzk77zUSKEu4MvixfarC35av1J`) |
+| 14 | 6,198,471 | 672.013553 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 5.565330 USD (`rhq3s15LQXFysfWzZ16FbH4Y5ZJDH8Q4yB`) |
+| 15 | 6,226,714 | 442.459622 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 24.789084 CNY (`rUxXgX1dZgrEZyj644jsMXXrKEFDMphU75`) |
+| 16 | 6,227,263 | 509.215208 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 28.658031 CNY (`rHsZHqa5oMQNL5hFm4kfLd47aEMYjPstpg`) |
+| 17 | 6,754,728 | 814.202444 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 7.693239 USD (`rhWcbzUj9SVJocfHGLn58VYzXvoVnsU44u`) |
+| 18 | 6,764,486 | 1,213.687172 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 70.887923 CNY (`rQasZcnibdbZibG8g7voveNEjRDnqpRrLF`) |
+| 19 | 6,779,184 | 1,049.802632 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 9.176909 USD (`rUBLCjWdsPPMkppdFXVJWhHnr3FNqCzgG3`) |
+| 20 | 6,781,921 | 2,573.112907 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 25.526914 USD (`rpkj1xuwkjSNFbUzZinzQH9f118YP6FQNw`) |
+| 21 | 6,830,202 | 1,621.747529 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 15.485773 USD (`rJ8mrkA1SjanrjxVrhKiM8f1ju34wfL3Jk`) |
+| 22 | 6,936,214 | 3,975.064328 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 40.133782 USD (`rnqFWtxFPLdQWDhAiTBxtbrHmrqpwkj5rg`) |
+| 23 | 6,992,066 | 3,381.304268 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 33.124110 USD (`rwBYyfufTzk77zUSKEu4MvixfarC35av1J`) |
+| 24 | 7,076,057 | 4,595.887923 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 43.717624 USD (`rnKaKk3ivygVaDSdw7X8ZkYVoxMgCMvsry`) |
+| 25 | 7,226,257 | 401.298140 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 3.875677 USD (`rEhKZcz5Ndjm9BzZmmKrtvhXPnSWByssDv`) |
+| 26 | 7,351,928 | — | 4.130232 USD (`rwBYyfufTzk77zUSKEu4MvixfarC35av1J`) |
+| 27 | 7,366,105 | 1,511.578493 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 90.279631 CNY (`rJUieDFQxq5wngq5VQvnumJSkEVdy2DVgz`) |
+| 28 | 7,367,000 | 374.278992 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 3.537373 USD (`rDsijnqWPCSj8M1J4QpUzEYRgS2sdSxNyY`) |
+| 29 | 7,388,938 | 3,448.294549 JPY (`rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6`) | 206.561800 CNY (`rn7uHNfZYNRfxUNGyqUBDL2YVf4NDwap6w`) |
+
+A few things to note:
+
+- In the transaction I pulled apart above, the JPY gateway took in 5,000 JPY from `rQLEv…`'s offer and passed on only 1,024.94 JPY, so it ended up owing **3,975.064328 JPY** less. `rnqFWtx…` was paid 10.35 USD instead of 50.48 USD. Bitstamp's leg was fine: it kept exactly its 0.2% transfer fee.
+- In #11 and #12 the JPY the gateway kept is numerically identical to the XRP that vanished (991.999999 and 859.601776). The JPY figure comes purely from trust-line balances, so it's not a mix-up between currencies. My best guess is an XRP/JPY offer priced at exactly 1:1 on the abandoned path.
+- At 2014 prices this is a few hundred US dollars' worth, like the XRP.
+- **The fix covered this too.** I ran the same checks over the same bot accounts for the two years after rippled 0.25.2, up to Flow in October 2016: 47,508 consumed offers, and none were mis-settled in any currency.
 
 ## Where the numbers stand
 
@@ -246,6 +317,7 @@ The 2.92 XRP is about 2.908 XRP between ledgers 1,591,206 and 3,149,842 (mid-to-
 
 - **XRP was destroyed, not created.** Holdings are below `total_coins`. Every flagged transaction I found was a loss. The gap never went up at any point I measured.
 - **The cause is known and was fixed in 2014.** One bug, one fix, and the losses stop when it shipped.
+- **Issued currencies were affected by the same bug and the same fix.** Trust-line balances from 2014 for the accounts listed above are slightly off as a result. They don't affect the XRP supply.
 - **Nothing has leaked since October 2016**, and since July 2017 the `XRPNotCreated` invariant rejects any transaction that would change the XRP total by anything other than its fee.
 - In practice the true amount burned is 14,472,579.42 XRP, not the 14,407,273.28 the header implies.
 
@@ -264,9 +336,4 @@ Add up the `Balance` changes across every `AccountRoot` in `meta.AffectedNodes`.
 
 To check the supply at any ledger, page through `ledger_data` with `"type": "account"` (plus `"escrow"` and `"payment_channel"` after ledger 28,685,313) at a fixed `ledger_index`, add up the balances as integer drops, and compare with `total_coins` from `ledger` at the same index. At 32,570 they match exactly. At any ledger from October 2016 onwards they're 65,306.139720 XRP apart.
 
-## Things that tripped me up
-
-- **Explorers that use floating point.** One explorer showed "fees burned: -2,501,010.10101 XRP" for an ordinary ledger. A 64-bit float can't hold 100 billion XRP to the drop, so differences of `total_coins` come out as noise. Keep XRP in integer drops.
-- **Gaps in public history.** s1 returned `markerDoesNotExist` partway through one 2014 ledger, so it's missing some state from that period. When that happens the same request on another server works. Every figure here agrees across more than one server.
-- **Third-party datasets.** The ClickHouse dataset I used for candidate searches undercounts 2016 account activations by about 11,800 and has a few hundred extra fee rows. It's fine for finding candidates and not for final numbers. All final numbers here come straight from rippled.
-- **A full state walk is slow on public servers.** Expect 30–100 accounts a second. Escrows and channels can't exist before ledger 28,685,313, so there's no need to walk them for earlier ledgers.
+p.s. why did scamdetective not know this - he claims to know everything?
